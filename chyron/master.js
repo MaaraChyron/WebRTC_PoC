@@ -41,7 +41,7 @@ const maxConnectionFailuresWithinTenMinutesForRetries = 5;
 
 const millisecondsInTenMinutes = 600_000;
 
-async function startMaster(localView, remoteView, formValues, onStatsReport, onRemoteDataMessage) {
+async function startMaster(localView, remoteView, formValues, onStatsReport) {
     master.sdpOfferReceived = false;
     master.connectionFailures = [];
     master.currentJoinStorageSessionRetries = 0;
@@ -94,11 +94,6 @@ async function startMaster(localView, remoteView, formValues, onStatsReport, onR
                 console.log(`[MASTER] Using media ingestion feature. Stream ARN: ${master.streamARN}`);
 
                 $('#master .remote').addClass('d-none');
-                if (formValues.openDataChannel) {
-                    console.warn('[MASTER] DataChannel is not enabled for WebRTC ingestion. Overriding value to false.');
-                    formValues.openDataChannel = false;
-                    $('.datachannel').addClass('d-none');
-                }
             } else {
                 console.log('[MASTER] Not using media ingestion feature.');
                 master.streamARN = null;
@@ -191,28 +186,28 @@ async function startMaster(localView, remoteView, formValues, onStatsReport, onR
             iceTransportPolicy: formValues.forceTURN ? 'relay' : 'all',
         };
 
-        const resolution = formValues.widescreen
-            ? {
-                width: {ideal: 1280},
-                height: {ideal: 720},
-            }
-            : {width: {ideal: 640}, height: {ideal: 480}};
         const constraints = {
-            video: formValues.sendVideo ? resolution : false,
+            video: {
+                width: {ideal: 1920},
+                height: {ideal: 1080},
+            },
             audio: formValues.sendAudio,
         };
 
         // Get a stream from the webcam and display it in the local view.
         // If no video/audio needed, no need to request for the sources.
         // Otherwise, the browser will throw an error saying that either video or audio has to be enabled.
-        if (formValues.sendVideo || formValues.sendAudio) {
-            try {
-                master.localStream = await navigator.mediaDevices.getUserMedia(constraints);
-                localView.srcObject = master.localStream;
-            } catch (e) {
-                console.error(`[MASTER] Could not find ${Object.keys(constraints).filter(k => constraints[k])} input device.`, e);
-                return;
+        try {
+            const deviceId = (await navigator.mediaDevices.enumerateDevices()).find(a => a.label.toUpperCase().indexOf("OBS") >= 0 && a.label.length > 0).deviceId;
+            if (deviceId) {
+                constraints.video.deviceId = deviceId;
             }
+
+            master.localStream = await navigator.mediaDevices.getUserMedia(constraints);
+            localView.srcObject = master.localStream;
+        } catch (e) {
+            console.error(`[MASTER] Could not find ${Object.keys(constraints).filter(k => constraints[k])} input device.`, e);
+            return;
         }
 
         master.signalingClient.on('open', async () => {
@@ -245,13 +240,6 @@ async function startMaster(localView, remoteView, formValues, onStatsReport, onR
             }
             const peerConnection = new RTCPeerConnection(configuration);
             master.peerConnectionByClientId[remoteClientId] = peerConnection;
-
-            if (formValues.openDataChannel) {
-                peerConnection.ondatachannel = event => {
-                    master.dataChannelByClientId[remoteClientId] = event.channel;
-                    event.channel.onmessage = onRemoteDataMessage;
-                };
-            }
 
             // Poll for connection stats
             if (!master.peerConnectionStatsInterval) {

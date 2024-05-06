@@ -11,7 +11,7 @@ async function listStorageChannels(formValues) {
 
         // Create KVS client
         const kinesisVideoClient = new AWS.KinesisVideo({
-            region: formValues.region,
+            region: "us-east-2",
             accessKeyId: formValues.accessKeyId,
             secretAccessKey: formValues.secretAccessKey,
             sessionToken: formValues.sessionToken,

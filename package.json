@@ -12,6 +12,7 @@
         "lib/**/*",
         "dist/**/*",
         "examples/**/*",
+        "chyron.master/**/*",
         "LICENSE.txt",
         "NOTICE.txt"
     ],
@@ -24,7 +25,9 @@
         "build-debug": "webpack --config webpack.debug.config.js",
         "build-dist": "webpack --config webpack.dist.config.js",
         "copy-examples-to-dist": "cp -r examples dist",
+        "copy-chyron-to-dist": "cp -r chyron.master dist",
         "develop": "webpack-dev-server --config webpack.dev.config.js",
+        "chyron": "webpack-dev-server --config webpack.chyron.config.js",
         "lint": "eslint 'src/**/*.{js,ts}'",
         "release": "npm run lint && npm run test && npm run build-all && npm run copy-examples-to-dist"
     },
@@ -59,6 +62,7 @@
         "jsdom": "^20.0.0",
         "json-schema": "^0.4.0",
         "json5": "^2.2.3",
+        "simplehttpserver": "^0.3.0",
         "tslib": "^1.10.0",
         "ua-parser-js": "^1.0.35",
         "ws": "^8.14.2",
