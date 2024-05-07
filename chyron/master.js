@@ -198,9 +198,13 @@ async function startMaster(localView, remoteView, formValues, onStatsReport) {
         // If no video/audio needed, no need to request for the sources.
         // Otherwise, the browser will throw an error saying that either video or audio has to be enabled.
         try {
-            const deviceId = (await navigator.mediaDevices.enumerateDevices()).find(a => a.label.toUpperCase().indexOf("OBS") >= 0 && a.label.length > 0).deviceId;
-            if (deviceId) {
-                constraints.video.deviceId = deviceId;
+            const deviceList = await navigator.mediaDevices.enumerateDevices();
+            const index = deviceList.findIndex(a => a.label.toUpperCase().indexOf("OBS") >= 0 && a.label.length > 0);
+
+            if (index >= 0) {
+                constraints.video.deviceId = deviceList[index].deviceId;
+            } else {
+                console.error("OBS camera not found! The selected camera may not be the right one.")
             }
 
             master.localStream = await navigator.mediaDevices.getUserMedia(constraints);
