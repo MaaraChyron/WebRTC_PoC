@@ -37,6 +37,7 @@ let droppedFramePerArray = [];
 let videoBitRateArray = [];
 let audioRateArray = [];
 let timeArray = [];
+let resolutionArray = [];
 let chartHeight = 0;
 
 let signalingSetUpTime = 0;
@@ -298,6 +299,7 @@ async function startViewer(remoteView, formValues, onStatsReport) {
             videoBitRateArray = [];
             audioRateArray = [];
             timeArray = [];
+            resolutionArray = [];
 
             chart = new Chart('metricsChart', {
                 type: 'line',
@@ -331,6 +333,13 @@ async function startViewer(remoteView, formValues, onStatsReport) {
                             backgroundColor: 'orange',
                             fill: false,
                             data: audioRateArray,
+                        },
+                        {
+                            label: 'Video width',
+                            borderColor: 'brown',
+                            backgroundColor: 'brown',
+                            fill: false,
+                            data: resolutionArray,
                         },
                     ],
                 },
@@ -513,7 +522,7 @@ async function startViewer(remoteView, formValues, onStatsReport) {
         // Poll for connection stats if metrics enabled
         if (formValues.enableDQPmetrics) {
             // viewer.peerConnectionStatsInterval = setInterval(() => viewer.peerConnection.getStats().then(onStatsReport), 1000);
-            viewer.peerConnectionStatsInterval = setInterval(() => viewer.peerConnection.getStats().then(stats => calcStats(stats, formValues.clientId)), 1000);
+            viewer.peerConnectionStatsInterval = setInterval(() => viewer.peerConnection.getStats().then(stats => calcStats(stats, formValues.clientId)), 100);
         }
 
         if (formValues.enableProfileTimeline) {
@@ -893,6 +902,7 @@ function calcStats(stats, clientId) {
                 // prettier-ignore
                 htmlString =
                     '<table><tr><strong>DQP TEST (2min) - <FONT COLOR=RED>RESULTS READY IN: ' + (DQPtestLength - statRunTime) + ' sec</FONT></strong></tr>' +
+                    '<tr><td>Video Resolution: </td><td>' + videoWidth + ' x ' + videoHeight + '</td></tr>' +
                     '<tr><td>Client ID: </td><td>' + clientId + '</td></tr>' +
                     '<tr><td>Time from viewer button click to signaling setup: </td><td>' + signalingSetUpTime + ' ms</td></tr>' +
                     '<tr><td>Time to set up viewer media view: </td><td>' + timeToSetUpViewerMedia + ' ms</td></tr>' +
@@ -912,11 +922,13 @@ function calcStats(stats, clientId) {
                 videoBitRateArray.push(videoBitrate);
                 audioRateArray.push(audioBitrate);
                 timeArray.push(statRunTime);
+                resolutionArray.push(videoWidth);
                 chart.update();
             } else {
                 // prettier-ignore
                 htmlString =
                     '<table><tr><th>DQP TEST COMPLETE - RESULTS:</th></tr>' +
+                    '<tr><td>Video Resolution: </td><td>' + videoWidth + ' x ' + videoHeight + '</td></tr>' +
                     '<tr><td>Test Run Time:</td><td>' + DQPtestLength + ' sec</td></tr>' +
                     '<tr><td>Client ID: </td><td>' + clientId + '</td></tr>' +
                     '<tr><td>Selected remote candidate: </td><td>' + remoteCandidateConnectionString + '</td></tr>' +
@@ -941,6 +953,7 @@ function calcStats(stats, clientId) {
             // prettier-ignore
             htmlString =
                 '<table><tr><td>VIEWER Start: </td><td>' + new Date(viewerButtonPressed).toISOString() + '</td></tr>' +
+                '<tr><td>Resolution: </td><td>' + videoWidth + ' x ' + videoHeight + '</td></tr>' +
                 '<tr><td>TRACK Start: </td><td>' + new Date(initialDate).toISOString() + '</td></tr>' +
                 '<tr><td>DECODED Start: </td><td>' + new Date(statStartDate).toISOString() + '</td></tr>' +
                 '<tr><td>Time Connected: </td><td>' + statRunTime + ' sec</td></tr>' +

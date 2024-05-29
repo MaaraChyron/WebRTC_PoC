@@ -187,27 +187,35 @@ async function startMaster(localView, remoteView, formValues, onStatsReport) {
         };
 
         const constraints = {
+
             video: {
-                width: {ideal: 1920},
-                height: {ideal: 1080},
+                width: { exact: 1920 },
+                height: { exact: 1080 },
             },
             audio: formValues.sendAudio,
-        };
+        };   
+
+        console.log("Maara was here!");
 
         // Get a stream from the webcam and display it in the local view.
         // If no video/audio needed, no need to request for the sources.
         // Otherwise, the browser will throw an error saying that either video or audio has to be enabled.
         try {
-            const deviceList = await navigator.mediaDevices.enumerateDevices();
-            const index = deviceList.findIndex(a => a.label.toUpperCase().indexOf("OBS") >= 0 && a.label.length > 0);
+            // const deviceList = await navigator.mediaDevices.enumerateDevices();
+            // const index = deviceList.findIndex(a => a.label.toUpperCase().indexOf("OBS") >= 0 && a.label.length > 0);
 
-            if (index >= 0) {
-                constraints.video.deviceId = deviceList[index].deviceId;
-            } else {
-                console.error("OBS camera not found! The selected camera may not be the right one.")
-            }
+            // if (index >= 0) {
+            //     constraints.video.deviceId = deviceList[index].deviceId;
+            // } else {
+            //     console.error("OBS camera not found! The selected camera may not be the right one.")
+            // }
 
             master.localStream = await navigator.mediaDevices.getUserMedia(constraints);
+
+            for (const track of master.localStream.getVideoTracks()) {
+                track.contentHint = "detail"
+            } 
+
             localView.srcObject = master.localStream;
         } catch (e) {
             console.error(`[MASTER] Could not find ${Object.keys(constraints).filter(k => constraints[k])} input device.`, e);
